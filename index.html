@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<meta charset="UTF-8">
+<title>TGS</title>
+
+<div id="picture" style="width:512px;max-width:100%;aspect-ratio:1"
+     role="img" aria-label="Стикер"></div>
+<p id="error"></p>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+<script>
+const file = "./PoC.tgs"; // Здесь укажи свой файл
+
+async function showTGS() {
+  const response = await fetch(file);
+  if (!response.ok) throw new Error(`Ошибка загрузки: ${response.status}`);
+
+  const stream = response.body.pipeThrough(
+    new DecompressionStream("gzip")
+  );
+  const data = await new Response(stream).json();
+
+  // Проверка числа вершин перед отрисовкой.
+  function check(value) {
+    if (!value || typeof value !== "object") return;
+    if (value.ty === "sr") {
+      const points = value.pt;
+      if (points?.a !== 0 ||
+          !Number.isFinite(points.k) ||
+          points.k < 2 || points.k > 10000000000000000000000000000000) {
+        throw new Error("Недопустимое число вершин звезды в TGS.");
+      }
+    }
+    Object.values(value).forEach(check);
+  }
+  check(data);
+
+  lottie.loadAnimation({
+    container: document.getElementById("picture"),
+    renderer: "svg",
+    loop: true,
+    autoplay: true,
+    animationData: data
+  });
+}
+
+showTGS().catch(error => {
+  document.getElementById("error").textContent = error.message;
+});
+</script>
+</html>
