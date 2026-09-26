@@ -20,20 +20,6 @@ async function showTGS() {
   );
   const data = await new Response(stream).json();
 
-  // Проверка числа вершин перед отрисовкой.
-  function check(value) {
-    if (!value || typeof value !== "object") return;
-    if (value.ty === "sr") {
-      const points = value.pt;
-      if (points?.a !== 0 ||
-          !Number.isFinite(points.k) ||
-          points.k < 2 || points.k > 10000000000000000000000000000000) {
-        throw new Error("Недопустимое число вершин звезды в TGS.");
-      }
-    }
-    Object.values(value).forEach(check);
-  }
-  check(data);
 
   lottie.loadAnimation({
     container: document.getElementById("picture"),
